@@ -117,11 +117,54 @@ export default function ItemsPage() {
     }
   }, [columnVisibility])
 
+  const loadOwners = useCallback(async () => {
+    try {
+      const res = await fetch("/api/lookups/owners")
+      const data = await res.json()
+      setOwners(data)
+    } catch (error) {
+      console.error("Failed to load owners:", error)
+    }
+  }, [])
+
+  const loadVendors = useCallback(async () => {
+    try {
+      const res = await fetch("/api/lookups/vendors")
+      const data = await res.json()
+      setVendors(data)
+    } catch (error) {
+      console.error("Failed to load vendors:", error)
+    }
+  }, [])
+
+  const loadItems = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({ pageSize: "1000" })
+      if (yearFilter !== "all") params.append("year", yearFilter)
+      if (statusFilter !== "all") params.append("status", statusFilter)
+      if (typeFilter !== "all") params.append("type", typeFilter)
+      if (subTypeFilter !== "all") params.append("subType", subTypeFilter)
+      if (workClassFilter !== "all") params.append("workClass", workClassFilter)
+      if (categoryFilter !== "all") params.append("category", categoryFilter)
+      if (ownerFilter !== "all") params.append("ownerId", ownerFilter)
+      if (vendorFilter !== "all") params.append("vendorId", vendorFilter)
+
+      const response = await fetch(`/api/budget/items?${params}`)
+      const data = await response.json()
+      setItems(data.items)
+    } catch (error) {
+      console.error("Failed to load items:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [yearFilter, statusFilter, typeFilter, subTypeFilter, workClassFilter, categoryFilter, ownerFilter, vendorFilter])
+
   useEffect(() => {
     loadItems()
     loadOwners()
     loadVendors()
-  }, [yearFilter, statusFilter, typeFilter, subTypeFilter, workClassFilter, categoryFilter, ownerFilter, vendorFilter])
+  }, [loadItems, loadOwners, loadVendors])
 
   // Sync top scrollbar with table scroll and set correct width
   useEffect(() => {
@@ -169,49 +212,6 @@ export default function ItemsPage() {
       topScrollbar.removeEventListener('scroll', handleTopScroll)
     }
   }, [items])
-
-  const loadOwners = async () => {
-    try {
-      const res = await fetch("/api/lookups/owners")
-      const data = await res.json()
-      setOwners(data)
-    } catch (error) {
-      console.error("Failed to load owners:", error)
-    }
-  }
-
-  const loadVendors = async () => {
-    try {
-      const res = await fetch("/api/lookups/vendors")
-      const data = await res.json()
-      setVendors(data)
-    } catch (error) {
-      console.error("Failed to load vendors:", error)
-    }
-  }
-
-  const loadItems = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams({ pageSize: "1000" })
-      if (yearFilter !== "all") params.append("year", yearFilter)
-      if (statusFilter !== "all") params.append("status", statusFilter)
-      if (typeFilter !== "all") params.append("type", typeFilter)
-      if (subTypeFilter !== "all") params.append("subType", subTypeFilter)
-      if (workClassFilter !== "all") params.append("workClass", workClassFilter)
-      if (categoryFilter !== "all") params.append("category", categoryFilter)
-      if (ownerFilter !== "all") params.append("ownerId", ownerFilter)
-      if (vendorFilter !== "all") params.append("vendorId", vendorFilter)
-
-      const response = await fetch(`/api/budget/items?${params}`)
-      const data = await response.json()
-      setItems(data.items)
-    } catch (error) {
-      console.error("Failed to load items:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const columns = useMemo<ColumnDef<BudgetItem>[]>(
     () => [
@@ -375,7 +375,7 @@ export default function ItemsPage() {
         },
       }),
     ],
-    [selectedItemForEdit, owners, items]
+    []
   )
 
   const table = useReactTable({
@@ -439,7 +439,7 @@ export default function ItemsPage() {
     } catch {
       return []
     }
-  }, [table, items, globalFilter, yearFilter, statusFilter])
+  }, [table])
 
   const rowsSafe = useMemo(() => {
     try {
@@ -451,7 +451,7 @@ export default function ItemsPage() {
       console.error("[rowsSafe] error:", e)
       return []
     }
-  }, [table, items, globalFilter])
+  }, [table])
 
   const CATEGORY_OPTIONS = [
     "AI Introduction & Business Applications",
@@ -513,7 +513,7 @@ export default function ItemsPage() {
         throw error
       }
     },
-    [selectedItemForEdit]
+    [selectedItemForEdit, loadItems]
   )
 
   const startEdit = (item: BudgetItem) => {
@@ -526,7 +526,7 @@ export default function ItemsPage() {
     setIsEditModalOpen(false)
   }
 
-  const handleDelete = async (id: string, itemName: string) => {
+  const handleDelete = useCallback(async (id: string, itemName: string) => {
     if (!confirm(`Are you sure you want to delete "${itemName}"? This action cannot be undone.`)) {
       return
     }
@@ -541,7 +541,7 @@ export default function ItemsPage() {
       console.error("Failed to delete:", error)
       alert("Failed to delete item")
     }
-  }
+  }, [loadItems])
 
   const handleCreate = async () => {
     if (!createPayload.itemName) return

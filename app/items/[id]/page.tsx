@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -49,13 +49,7 @@ export default function ItemDetailPage() {
   const [item, setItem] = useState<BudgetItem | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (params.id) {
-      loadItem()
-    }
-  }, [params.id])
-
-  const loadItem = async () => {
+  const loadItem = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch(`/api/budget/items/${params.id}`)
@@ -67,7 +61,13 @@ export default function ItemDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
+
+  useEffect(() => {
+    if (params.id) {
+      loadItem()
+    }
+  }, [params.id, loadItem])
 
   if (loading) {
     return <div className="container mx-auto p-8">Loading...</div>

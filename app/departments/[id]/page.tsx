@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import Link from "next/link"
@@ -11,13 +11,7 @@ export default function DepartmentDetailPage() {
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (params.id) {
-      loadData()
-    }
-  }, [params.id])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       const deptsResponse = await fetch("/api/lookups/departments")
@@ -33,7 +27,13 @@ export default function DepartmentDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
+
+  useEffect(() => {
+    if (params.id) {
+      loadData()
+    }
+  }, [params.id, loadData])
 
   if (loading) return <div className="container mx-auto p-8">Loading...</div>
   if (!department) return <div className="container mx-auto p-8">Department not found</div>
