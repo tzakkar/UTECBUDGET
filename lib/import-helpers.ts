@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx"
 import { prisma } from "./prisma"
+import { Prisma } from "@prisma/client"
 import { parseNumeric, parseInteger, mapStatusStringToEnum, mapTypeStringToEnum, mapSubTypeStringToEnum, mapClassStringToEnum } from "./validation"
 import { inferColumnMapping, generateIdempotencyKey, type ColumnMapping } from "./mappings"
 
@@ -260,7 +261,7 @@ export async function commitImport(
           status: mapStatusStringToEnum(rowData.status),
           percentComplete: parseInteger(rowData.percentComplete) || 0,
           notes: rowData.notes?.toString().trim() || null,
-          extendedFields: Object.keys(extendedFields).length > 0 ? extendedFields : null,
+          extendedFields: Object.keys(extendedFields).length > 0 ? (extendedFields as any) : Prisma.JsonNull,
         }
         
         // Generate idempotency key
