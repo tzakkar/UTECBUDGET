@@ -1,0 +1,248 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum BudgetStatus {
+  COMPLETED
+  PARTIAL
+  IN_PROGRESS
+  NOT_STARTED
+}
+
+enum WorkType {
+  BAU
+  NEOBAU
+  REV
+}
+
+enum WorkSubType {
+  BAU
+  NEOBAU
+  SAP
+  MES
+  SUSTAINABILITY
+  AI
+}
+
+enum WorkClass {
+  HARDWARE
+  IMPLEMENTATION
+  MAINTENANCE
+  MANPOWER
+  SAP_SUPPORT
+  SUBSCRIPTION
+}
+
+model Owner {
+  id          String   @id @default(cuid())
+  code        String?  @db.VarChar(64)
+  name        String
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budgetItems BudgetItem[]
+  @@unique([code])
+  @@map("owners")
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  code        String?  @db.VarChar(64)
+  name        String
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budgetItems BudgetItem[]
+  @@unique([code])
+  @@map("departments")
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  code        String?  @db.VarChar(64)
+  name        String
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budgetItems BudgetItem[]
+  @@unique([code])
+  @@map("locations")
+}
+
+model Vendor {
+  id          String   @id @default(cuid())
+  code        String?  @db.VarChar(64)
+  name        String
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budgetItems BudgetItem[]
+  @@unique([code])
+  @@map("vendors")
+}
+
+model Program {
+  id          String   @id @default(cuid())
+  code        String?  @db.VarChar(64)
+  name        String
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budgetItems BudgetItem[]
+  @@unique([code])
+  @@map("programs")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  code        String?  @db.VarChar(64)
+  name        String
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budgetItems BudgetItem[]
+  @@unique([code])
+  @@map("projects")
+}
+
+model CostCenter {
+  id          String   @id @default(cuid())
+  code        String?  @db.VarChar(64)
+  name        String
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budgetItems BudgetItem[]
+  @@unique([code])
+  @@map("cost_centers")
+}
+
+model GL {
+  id          String   @id @default(cuid())
+  code        String?  @db.VarChar(64)
+  name        String
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  budgetItems BudgetItem[]
+  @@unique([code])
+  @@map("gls")
+}
+
+model BudgetItem {
+  id              String       @id @default(cuid())
+  year            Int
+  quarter         Int?
+  type            WorkType?
+  subType         WorkSubType?
+  workClass       WorkClass?
+  programId       String?      @db.VarChar(64)
+  projectId       String?      @db.VarChar(64)
+  category        String?
+  subCategory     String?
+  itemName        String
+  model           String?
+  ownerId         String?      @db.VarChar(64)
+  departmentId    String?      @db.VarChar(64)
+  locationId      String?      @db.VarChar(64)
+  vendorId        String?      @db.VarChar(64)
+
+  quantity        Int?         @default(1)
+  unitCost        Decimal?     @db.Decimal(18, 2)
+  capex           Decimal?     @db.Decimal(18, 2)
+  opex            Decimal?     @db.Decimal(18, 2)
+  budget          Decimal?     @db.Decimal(18, 2)
+  committed       Decimal?     @db.Decimal(18, 2) @default(0)
+  spent           Decimal?     @db.Decimal(18, 2) @default(0)
+  remaining       Decimal?     @db.Decimal(18, 2)
+
+  costCenterId    String?      @db.VarChar(64)
+  glId            String?      @db.VarChar(64)
+
+  status          BudgetStatus @default(NOT_STARTED)
+  percentComplete Int?         @default(0)
+
+  prNumber        String?
+  poNumber        String?
+
+  notes           String?
+  extendedFields  Json?
+
+  // Replacement tracking
+  replacedById    String?      // ID of the item that replaces this one
+  replacesItemId  String?       // ID of the item this one replaces
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  program         Program?     @relation(fields: [programId], references: [id], onDelete: SetNull)
+  project         Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  owner           Owner?       @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  department      Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  location        Location?    @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  vendor          Vendor?      @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  costCenter      CostCenter?  @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  gl              GL?          @relation(fields: [glId], references: [id], onDelete: SetNull)
+  
+  // Replacement relations (self-referential)
+  replacedBy      BudgetItem?  @relation("ItemReplacedBy", fields: [replacedById], references: [id], onDelete: SetNull)
+  itemsReplacedBy BudgetItem[] @relation("ItemReplacedBy")
+  replacesItem    BudgetItem?  @relation("ItemReplaces", fields: [replacesItemId], references: [id], onDelete: SetNull)
+  itemsReplacing  BudgetItem[] @relation("ItemReplaces")
+
+  @@index([year, quarter])
+  @@index([projectId, programId])
+  @@index([category, subCategory])
+  @@index([status])
+  @@index([type])
+  @@index([subType])
+  @@index([workClass])
+  @@index([year])
+  @@index([replacedById])
+  @@index([replacesItemId])
+  @@map("budget_items")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      String?  // User ID or "system" for imports
+  entityType String   // "BudgetItem", "Owner", etc.
+  entityId   String
+  action     String   // "create", "update", "delete"
+  pre        Json?
+  post       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// Note: BudgetItemRollups is a SQL view, created via migration SQL
+// It aggregates BudgetItem data with computed columns for rollups
+
