@@ -42,6 +42,7 @@ interface BudgetItem {
   poNumber: string | null
   replacedById: string | null
   replacesItemId: string | null
+  ownerId: string | null
   replacedBy?: { id: string; itemName: string; year: number } | null
   replacesItem?: { id: string; itemName: string; year: number } | null
   owner?: { id: string; name: string } | null
@@ -381,6 +382,23 @@ export default function ItemsPage() {
     setIsEditModalOpen(true)
   }
 
+  const handleDelete = useCallback(async (id: string, itemName: string) => {
+    if (!confirm(`Are you sure you want to delete "${itemName}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/budget/items/${id}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Failed to delete item")
+      await loadItems()
+    } catch (error) {
+      console.error("Failed to delete:", error)
+      alert("Failed to delete item")
+    }
+  }, [loadItems])
+
   // Memoize the columns callback to prevent unnecessary re-renders
   const columns = useMemo(() => getColumns(startEdit, handleDelete) as ColumnDef<BudgetItem>[], [startEdit, handleDelete])
 
@@ -526,23 +544,6 @@ export default function ItemsPage() {
     setSelectedItemForEdit(null)
     setIsEditModalOpen(false)
   }
-
-  const handleDelete = useCallback(async (id: string, itemName: string) => {
-    if (!confirm(`Are you sure you want to delete "${itemName}"? This action cannot be undone.`)) {
-      return
-    }
-
-    try {
-      const res = await fetch(`/api/budget/items/${id}`, {
-        method: "DELETE",
-      })
-      if (!res.ok) throw new Error("Failed to delete item")
-      await loadItems()
-    } catch (error) {
-      console.error("Failed to delete:", error)
-      alert("Failed to delete item")
-    }
-  }, [loadItems])
 
   const handleCreate = async () => {
     if (!createPayload.itemName) return
