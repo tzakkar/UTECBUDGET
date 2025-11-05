@@ -24,11 +24,12 @@ export async function PATCH(
       )
     }
     
-    // Recalculate remaining if budget or spent changed
+    // Build update payload and recalc remaining if budget or spent changed
+    const updateData: typeof validated & { remaining?: number } = { ...validated }
     if (validated.budget !== undefined || validated.spent !== undefined) {
       const newBudget = validated.budget !== undefined ? validated.budget : Number(existing.budget || 0)
       const newSpent = validated.spent !== undefined ? validated.spent : Number(existing.spent || 0)
-      validated.remaining = newBudget - newSpent
+      updateData.remaining = newBudget - newSpent
     }
     
     // Handle bidirectional replacement linking
@@ -87,7 +88,7 @@ export async function PATCH(
     // Update item
     const updated = await prisma.budgetItem.update({
       where: { id: params.id },
-      data: validated,
+      data: updateData,
       include: {
         owner: true,
         department: true,
