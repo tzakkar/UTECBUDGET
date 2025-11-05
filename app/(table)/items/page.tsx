@@ -53,6 +53,169 @@ interface BudgetItem {
 
 const columnHelper = createColumnHelper<BudgetItem>()
 
+// Define columns outside the component since they don't depend on state
+const getColumns = (startEdit: (item: BudgetItem) => void, handleDelete: (id: string, itemName: string) => Promise<void>): ColumnDef<BudgetItem>[] => [
+  columnHelper.accessor("itemName", {
+    header: "Item",
+    cell: (info) => {
+      const item = info.row.original
+      return (
+        <div className="flex items-center gap-2">
+          <span>{info.getValue()}</span>
+          {item.replacedBy && (
+            <Badge variant="secondary" className="text-xs">
+              Replaced
+            </Badge>
+          )}
+          {item.replacesItem && (
+            <Badge variant="outline" className="text-xs">
+              Replacement
+            </Badge>
+          )}
+        </div>
+      )
+    },
+  }),
+  columnHelper.accessor("year", {
+    header: "Year",
+  }),
+  columnHelper.accessor("quarter", {
+    header: "Quarter",
+    cell: (info) => info.getValue() || "-",
+  }),
+  columnHelper.accessor("category", {
+    header: "Category",
+    cell: (info) => info.getValue() || "-",
+  }),
+   columnHelper.accessor("status", {
+    header: "Status",
+    cell: (info) => (
+      <Badge
+        variant={
+          info.getValue() === "COMPLETED"
+            ? "default"
+            : info.getValue() === "IN_PROGRESS"
+            ? "secondary"
+            : "outline"
+        }
+      >
+        {info.getValue()}
+      </Badge>
+    ),
+  }),
+  columnHelper.accessor("percentComplete", {
+    header: "% Complete",
+    cell: (info) => `${info.getValue() || 0}%`,
+  }),
+  columnHelper.accessor("quantity", {
+    header: "Quantity",
+    cell: (info) => info.getValue() ?? 1,
+  }),
+  columnHelper.accessor("budget", {
+    header: "Budget",
+    cell: (info) =>
+      info.getValue()
+        ? `$${info.getValue()!.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+        : "-",
+  }),
+  columnHelper.accessor("spent", {
+    header: "Spent",
+    cell: (info) =>
+      info.getValue()
+        ? `$${info.getValue()!.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+        : "-",
+  }),
+  columnHelper.accessor("committed", {
+    header: "Committed",
+    cell: (info) =>
+      info.getValue()
+        ? `$${info.getValue()!.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+        : "-",
+  }),
+  columnHelper.accessor("remaining", {
+    header: "Remaining",
+    cell: (info) =>
+      info.getValue()
+        ? `$${info.getValue()!.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+        : "-",
+  }),
+   columnHelper.accessor("owner", {
+    header: "Beneficiary",
+    cell: (info) => info.getValue()?.name || "-",
+  }),
+  columnHelper.accessor("vendor", {
+    header: "Vendor",
+    cell: (info) => info.getValue()?.name || "-",
+  }),
+   columnHelper.display({
+    id: "prNumber",
+    header: "PR Number",
+    cell: (info) => info.row.original.prNumber || "-",
+  }),
+   columnHelper.display({
+    id: "poNumber",
+    header: "PO Number",
+    cell: (info) => info.row.original.poNumber || "-",
+  }),
+  columnHelper.display({
+    id: "replacement",
+    header: "Replacement",
+    cell: (info) => {
+      const item = info.row.original
+      if (item.replacedBy || item.replacesItem) {
+        return (
+          <div className="space-y-1 text-xs min-w-[200px]">
+            {item.replacesItem && (
+              <div className="flex items-center gap-1">
+                <span className="text-muted-foreground">Replaces:</span>
+                <Badge variant="outline" className="text-xs">
+                  {item.replacesItem.itemName} ({item.replacesItem.year})
+                </Badge>
+              </div>
+            )}
+            {item.replacedBy && (
+              <div className="flex items-center gap-1">
+                <span className="text-muted-foreground">Replaced by:</span>
+                <Badge variant="secondary" className="text-xs">
+                  {item.replacedBy.itemName} ({item.replacedBy.year})
+                </Badge>
+              </div>
+            )}
+          </div>
+        )
+      }
+      return <span className="text-muted-foreground text-xs">-</span>
+    },
+  }),
+  columnHelper.display({
+    id: "actions",
+    header: "Actions",
+    cell: (info) => {
+      const item = info.row.original
+      return (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => startEdit(item)}
+            className="h-8"
+          >
+            Edit
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => handleDelete(item.id, item.itemName)}
+            className="h-8"
+          >
+            Delete
+          </Button>
+        </div>
+      )
+    },
+  }),
+]
+
 export default function ItemsPage() {
   const [items, setItems] = useState<BudgetItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -213,170 +376,13 @@ export default function ItemsPage() {
     }
   }, [items])
 
-  const columns = useMemo<ColumnDef<BudgetItem>[]>(
-    () => [
-      columnHelper.accessor("itemName", {
-        header: "Item",
-        cell: (info) => {
-          const item = info.row.original
-          return (
-            <div className="flex items-center gap-2">
-              <span>{info.getValue()}</span>
-              {item.replacedBy && (
-                <Badge variant="secondary" className="text-xs">
-                  Replaced
-                </Badge>
-              )}
-              {item.replacesItem && (
-                <Badge variant="outline" className="text-xs">
-                  Replacement
-                </Badge>
-              )}
-            </div>
-          )
-        },
-      }),
-      columnHelper.accessor("year", {
-        header: "Year",
-      }),
-      columnHelper.accessor("quarter", {
-        header: "Quarter",
-        cell: (info) => info.getValue() || "-",
-      }),
-      columnHelper.accessor("category", {
-        header: "Category",
-        cell: (info) => info.getValue() || "-",
-      }),
-       columnHelper.accessor("status", {
-        header: "Status",
-        cell: (info) => (
-          <Badge
-            variant={
-              info.getValue() === "COMPLETED"
-                ? "default"
-                : info.getValue() === "IN_PROGRESS"
-                ? "secondary"
-                : "outline"
-            }
-          >
-            {info.getValue()}
-          </Badge>
-        ),
-      }),
-      columnHelper.accessor("percentComplete", {
-        header: "% Complete",
-        cell: (info) => `${info.getValue() || 0}%`,
-      }),
-      columnHelper.accessor("quantity", {
-        header: "Quantity",
-        cell: (info) => info.getValue() ?? 1,
-      }),
-      columnHelper.accessor("budget", {
-        header: "Budget",
-        cell: (info) =>
-          info.getValue()
-            ? `$${info.getValue()!.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-            : "-",
-      }),
-      columnHelper.accessor("spent", {
-        header: "Spent",
-        cell: (info) =>
-          info.getValue()
-            ? `$${info.getValue()!.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-            : "-",
-      }),
-      columnHelper.accessor("committed", {
-        header: "Committed",
-        cell: (info) =>
-          info.getValue()
-            ? `$${info.getValue()!.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-            : "-",
-      }),
-      columnHelper.accessor("remaining", {
-        header: "Remaining",
-        cell: (info) =>
-          info.getValue()
-            ? `$${info.getValue()!.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-            : "-",
-      }),
-       columnHelper.accessor("owner", {
-        header: "Beneficiary",
-        cell: (info) => info.getValue()?.name || "-",
-      }),
-      columnHelper.accessor("vendor", {
-        header: "Vendor",
-        cell: (info) => info.getValue()?.name || "-",
-      }),
-       columnHelper.display({
-        id: "prNumber",
-        header: "PR Number",
-        cell: (info) => info.row.original.prNumber || "-",
-      }),
-       columnHelper.display({
-        id: "poNumber",
-        header: "PO Number",
-        cell: (info) => info.row.original.poNumber || "-",
-      }),
-      columnHelper.display({
-        id: "replacement",
-        header: "Replacement",
-        cell: (info) => {
-          const item = info.row.original
-          if (item.replacedBy || item.replacesItem) {
-            return (
-              <div className="space-y-1 text-xs min-w-[200px]">
-                {item.replacesItem && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">Replaces:</span>
-                    <Badge variant="outline" className="text-xs">
-                      {item.replacesItem.itemName} ({item.replacesItem.year})
-                    </Badge>
-                  </div>
-                )}
-                {item.replacedBy && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">Replaced by:</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {item.replacedBy.itemName} ({item.replacedBy.year})
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            )
-          }
-          return <span className="text-muted-foreground text-xs">-</span>
-        },
-      }),
-      columnHelper.display({
-        id: "actions",
-        header: "Actions",
-        cell: (info) => {
-          const item = info.row.original
-          return (
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => startEdit(item)}
-                className="h-8"
-              >
-                Edit
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => handleDelete(item.id, item.itemName)}
-                className="h-8"
-              >
-                Delete
-              </Button>
-            </div>
-          )
-        },
-      }),
-    ],
-    []
-  )
+  const startEdit = (item: BudgetItem) => {
+    setSelectedItemForEdit(item)
+    setIsEditModalOpen(true)
+  }
+
+  // Memoize the columns callback to prevent unnecessary re-renders
+  const columns = useMemo(() => getColumns(startEdit, handleDelete), [startEdit, handleDelete])
 
   const table = useReactTable({
     data: items,
@@ -515,11 +521,6 @@ export default function ItemsPage() {
     },
     [selectedItemForEdit, loadItems]
   )
-
-  const startEdit = (item: BudgetItem) => {
-    setSelectedItemForEdit(item)
-    setIsEditModalOpen(true)
-  }
 
   const cancelEdit = () => {
     setSelectedItemForEdit(null)
