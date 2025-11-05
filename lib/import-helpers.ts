@@ -219,13 +219,16 @@ export async function commitImport(
         const costCenterId = rowData.costCenterId ? await getOrCreateLookup("CostCenter", rowData.costCenterId) : null
         const glId = rowData.glId ? await getOrCreateLookup("GL", rowData.glId) : null
         
-        // Process financial fields
-        const budget = parseNumeric(rowData.budget) || parseNumeric(rowData.capex || 0) + parseNumeric(rowData.opex || 0) || null
-        const capex = parseNumeric(rowData.capex) || null
-        const opex = parseNumeric(rowData.opex) || null
-        const committed = parseNumeric(rowData.committed) || 0
-        const spent = parseNumeric(rowData.spent) || 0
-        const remaining = budget ? budget - spent : null
+        // Process financial fields with null-safe numeric coercion
+        const parsedBudget = parseNumeric(rowData.budget)
+        const parsedCapex = parseNumeric(rowData.capex)
+        const parsedOpex = parseNumeric(rowData.opex)
+        const capex = parsedCapex ?? null
+        const opex = parsedOpex ?? null
+        const budget = parsedBudget ?? ((Number(parsedCapex ?? 0) + Number(parsedOpex ?? 0)) || null)
+        const committed = Number(parseNumeric(rowData.committed) ?? 0)
+        const spent = Number(parseNumeric(rowData.spent) ?? 0)
+        const remaining = budget !== null ? Number(budget) - spent : null
         
         // Build the budget item data
         const budgetItemData = {
