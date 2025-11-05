@@ -89,7 +89,8 @@ export async function PATCH(
     // Update item
     const updated = await prisma.budgetItem.update({
       where: { id: params.id },
-      data: updateData,
+      // Cast to any to accommodate union of nullable fields validated by Zod
+      data: updateData as any,
       include: {
         owner: true,
         department: true,
