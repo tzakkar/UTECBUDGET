@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
 import { BudgetItemUpdateSchema } from "@/lib/validation"
 
 export const runtime = "nodejs"
@@ -235,7 +236,7 @@ export async function DELETE(
         entityId: params.id,
         action: "delete",
         pre: existing as any,
-        post: null,
+        post: Prisma.JsonNull,
       },
     })
     
