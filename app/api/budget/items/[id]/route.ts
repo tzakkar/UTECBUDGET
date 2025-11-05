@@ -27,8 +27,9 @@ export async function PATCH(
     // Build update payload and recalc remaining if budget or spent changed
     const updateData: typeof validated & { remaining?: number } = { ...validated }
     if (validated.budget !== undefined || validated.spent !== undefined) {
-      const newBudget = validated.budget !== undefined ? validated.budget : Number(existing.budget || 0)
-      const newSpent = validated.spent !== undefined ? validated.spent : Number(existing.spent || 0)
+      // Safely coerce to numbers, handling undefined/null cases
+      const newBudget = Number(validated.budget ?? existing.budget ?? 0)
+      const newSpent = Number(validated.spent ?? existing.spent ?? 0)
       updateData.remaining = newBudget - newSpent
     }
     
