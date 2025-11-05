@@ -54,7 +54,7 @@ interface BudgetItem {
 const columnHelper = createColumnHelper<BudgetItem>()
 
 // Define columns outside the component since they don't depend on state
-const getColumns = (startEdit: (item: BudgetItem) => void, handleDelete: (id: string, itemName: string) => Promise<void>): ColumnDef<BudgetItem>[] => [
+const getColumns = (startEdit: (item: BudgetItem) => void, handleDelete: (id: string, itemName: string) => Promise<void>) => [
   columnHelper.accessor("itemName", {
     header: "Item",
     cell: (info) => {
@@ -382,7 +382,7 @@ export default function ItemsPage() {
   }
 
   // Memoize the columns callback to prevent unnecessary re-renders
-  const columns = useMemo(() => getColumns(startEdit, handleDelete), [startEdit, handleDelete])
+  const columns = useMemo(() => getColumns(startEdit, handleDelete) as ColumnDef<BudgetItem>[], [startEdit, handleDelete])
 
   const table = useReactTable({
     data: items,
