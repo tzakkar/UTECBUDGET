@@ -62,6 +62,34 @@ export function EditItemModal({
   const [formData, setFormData] = useState<Partial<BudgetItem>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
+  const [ownerOptions, setOwnerOptions] = useState<Array<{ id: string; name: string }>>(owners ?? [])
+  const [vendorOptions, setVendorOptions] = useState<Array<{ id: string; name: string }>>(vendors ?? [])
+
+  useEffect(() => {
+    if (!Array.isArray(owners)) return
+    setOwnerOptions((prev) => {
+      const merged = [...owners]
+      if (item?.owner && !merged.some((owner) => owner.id === item.owner?.id)) {
+        merged.push({ id: item.owner.id, name: item.owner.name })
+      }
+      return merged
+    })
+  }, [owners, item?.owner])
+
+  useEffect(() => {
+    if (!Array.isArray(vendors)) return
+    setVendorOptions((prev) => {
+      const merged = [...vendors]
+      const vendorId = item?.vendor?.id
+      const vendorName = item?.vendor?.name
+      if (vendorId && vendorName && !merged.some((vendor) => vendor.id === vendorId)) {
+        merged.push({ id: vendorId, name: vendorName })
+      } else if (vendorName && !vendorId && !merged.some((vendor) => vendor.name === vendorName)) {
+        merged.push({ id: vendorName, name: vendorName })
+      }
+      return merged
+    })
+  }, [vendors, item?.vendor])
 
   useEffect(() => {
     if (item) {
@@ -203,8 +231,8 @@ export function EditItemModal({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__NONE__">None</SelectItem>
-                {Array.isArray(vendors) &&
-                  vendors.map((vendor) => (
+                {Array.isArray(vendorOptions) &&
+                  vendorOptions.map((vendor) => (
                     <SelectItem key={vendor.id} value={vendor.id}>
                       {vendor.name}
                     </SelectItem>
@@ -342,8 +370,8 @@ export function EditItemModal({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__NONE__">None</SelectItem>
-                {Array.isArray(owners) &&
-                  owners.map((owner) => (
+                {Array.isArray(ownerOptions) &&
+                  ownerOptions.map((owner) => (
                     <SelectItem key={owner.id} value={owner.id}>
                       {owner.name}
                     </SelectItem>
