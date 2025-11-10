@@ -33,6 +33,13 @@ interface BudgetItem {
   vendor?: { id?: string; name: string } | null
 }
 
+const parseNullableNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === "") return null
+  if (typeof value === "number") return Number.isFinite(value) ? value : null
+  const num = Number(value)
+  return Number.isFinite(num) ? num : null
+}
+
 interface EditItemModalProps {
   item: BudgetItem | null
   isOpen: boolean
@@ -58,13 +65,19 @@ export function EditItemModal({
 
   useEffect(() => {
     if (item) {
+      const percentComplete = parseNullableNumber(item.percentComplete) ?? 0
+      const quantity = parseNullableNumber(item.quantity) ?? 1
+      const budget = parseNullableNumber(item.budget)
+      const spent = parseNullableNumber(item.spent)
+      const committed = parseNullableNumber(item.committed)
+
       setFormData({
         status: item.status,
-        percentComplete: item.percentComplete,
-        quantity: item.quantity,
-        budget: item.budget,
-        spent: item.spent,
-        committed: item.committed,
+        percentComplete,
+        quantity,
+        budget,
+        spent,
+        committed,
         prNumber: item.prNumber || "",
         poNumber: item.poNumber || "",
         ownerId: item.ownerId || "",
@@ -105,13 +118,19 @@ export function EditItemModal({
       // }
 
       // Prepare data - convert __NONE__ sentinel values to null
+      const percentComplete = parseNullableNumber(formData.percentComplete) ?? 0
+      const quantity = parseNullableNumber(formData.quantity) ?? 1
+      const budget = parseNullableNumber(formData.budget)
+      const spent = parseNullableNumber(formData.spent)
+      const committed = parseNullableNumber(formData.committed)
+
       const dataToSave = {
         status: formData.status,
-        percentComplete: formData.percentComplete,
-        quantity: formData.quantity,
-        budget: formData.budget,
-        spent: formData.spent,
-        committed: formData.committed,
+        percentComplete,
+        quantity,
+        budget,
+        spent,
+        committed,
         prNumber: formData.prNumber && formData.prNumber !== "" ? formData.prNumber : null,
         poNumber: formData.poNumber && formData.poNumber !== "" ? formData.poNumber : null,
         ownerId: formData.ownerId && formData.ownerId !== "__NONE__" ? formData.ownerId : null,
