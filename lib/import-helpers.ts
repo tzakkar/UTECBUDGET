@@ -349,20 +349,29 @@ async function getOrCreateLookup(
     Project: prisma.project,
     CostCenter: prisma.costCenter,
     GL: prisma.gL,
+  } as const
+  
+  const model = models[type] as {
+    findFirst: (args: any) => Promise<{ id: string } | null>
+    create: (args: any) => Promise<{ id: string }>
   }
   
-  const model = models[type]
+  const where =
+    type === "CostCenter" || type === "GL"
+      ? {
+          OR: [{ code: name }, { name }],
+        }
+      : { name }
   
-  // Try to find by name
-  let existing = await model.findFirst({
-    where: { name },
-  })
+  let existing = await model.findFirst({ where })
   
   if (!existing) {
-    // Create new
-    existing = await model.create({
-      data: { name },
-    })
+    const data =
+      type === "CostCenter" || type === "GL"
+        ? { name, code: name }
+        : { name }
+    
+    existing = await model.create({ data })
   }
   
   return existing.id

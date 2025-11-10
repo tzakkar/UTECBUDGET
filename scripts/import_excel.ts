@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx"
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient, WorkSubType, WorkClass } from "@prisma/client"
 
 const prisma = new PrismaClient()
 
@@ -15,22 +15,23 @@ function parseNumber(value: any): number | null {
 }
 
 // Helper function to parse the SubType column
-function parseSubType(value: string): string {
-  if (!value) return "BAU"
+function parseSubType(value: unknown): WorkSubType {
+  const raw = value ? value.toString().trim() : ""
+  if (!raw) return "BAU"
   // Extract the part after the space, e.g., "00 BAU" -> "BAU"
-  const parts = value.trim().split(" ")
+  const parts = raw.split(" ")
   const subType = parts[parts.length - 1].toUpperCase()
   
-  const validSubTypes = ["BAU", "NEOBAU", "SAP", "MES", "SUSTAINABILITY", "AI"]
-  return validSubTypes.includes(subType) ? subType : "BAU"
+  const validSubTypes: readonly WorkSubType[] = ["BAU", "NEOBAU", "SAP", "MES", "SUSTAINABILITY", "AI"]
+  return validSubTypes.includes(subType as WorkSubType) ? (subType as WorkSubType) : "BAU"
 }
 
 // Helper function to parse Class to WorkClass
-function parseWorkClass(value: string): string {
+function parseWorkClass(value: unknown): WorkClass {
   if (!value) return "SUBSCRIPTION"
-  const cleanValue = value.trim().toUpperCase()
+  const cleanValue = value.toString().trim().toUpperCase()
   
-  const classMap: { [key: string]: string } = {
+  const classMap: { [key: string]: WorkClass } = {
     "SUBSCRIPTION": "SUBSCRIPTION",
     "HARDWARE": "HARDWARE",
     "IMPLEMENTATION": "IMPLEMENTATION",
