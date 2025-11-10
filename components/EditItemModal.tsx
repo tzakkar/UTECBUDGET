@@ -26,15 +26,18 @@ interface BudgetItem {
   prNumber: string | null
   poNumber: string | null
   ownerId: string | null
+  vendorId: string | null
   replacesItemId: string | null
   replacedById: string | null
   owner?: { id: string; name: string } | null
+  vendor?: { id: string; name: string } | null
 }
 
 interface EditItemModalProps {
   item: BudgetItem | null
   isOpen: boolean
   owners: Array<{ id: string; name: string }>
+  vendors: Array<{ id: string; name: string }>
   allItems?: Array<{ id: string; itemName: string; year: number }>
   onClose: () => void
   onSave: (updatedItem: Partial<BudgetItem>) => Promise<void>
@@ -44,6 +47,7 @@ export function EditItemModal({
   item,
   isOpen,
   owners,
+  vendors,
   allItems,
   onClose,
   onSave,
@@ -64,6 +68,7 @@ export function EditItemModal({
         prNumber: item.prNumber || "",
         poNumber: item.poNumber || "",
         ownerId: item.ownerId || "",
+        vendorId: item.vendorId || "",
         replacesItemId: item.replacesItemId || "",
         replacedById: item.replacedById || "",
       })
@@ -110,6 +115,7 @@ export function EditItemModal({
         prNumber: formData.prNumber && formData.prNumber !== "" ? formData.prNumber : null,
         poNumber: formData.poNumber && formData.poNumber !== "" ? formData.poNumber : null,
         ownerId: formData.ownerId && formData.ownerId !== "__NONE__" ? formData.ownerId : null,
+        vendorId: formData.vendorId && formData.vendorId !== "__NONE__" ? formData.vendorId : null,
         replacesItemId: formData.replacesItemId && formData.replacesItemId !== "__NONE__" ? formData.replacesItemId : null,
         replacedById: formData.replacedById && formData.replacedById !== "__NONE__" ? formData.replacedById : null,
       }
@@ -160,6 +166,30 @@ export function EditItemModal({
                 <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                 <SelectItem value="PARTIAL">Partial</SelectItem>
                 <SelectItem value="COMPLETED">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Vendor */}
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Vendor</Label>
+            <Select
+              value={formData.vendorId || "__NONE__"}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, vendorId: value === "__NONE__" ? null : value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Vendor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__NONE__">None</SelectItem>
+                {Array.isArray(vendors) &&
+                  vendors.map((vendor) => (
+                    <SelectItem key={vendor.id} value={vendor.id}>
+                      {vendor.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>

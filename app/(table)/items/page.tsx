@@ -1376,6 +1376,7 @@ export default function ItemsPage() {
         item={selectedItemForEdit}
         onSave={handleSaveEdit}
         owners={owners}
+        vendors={vendors}
         allItems={items.map(i => ({ id: i.id, itemName: i.itemName, year: i.year }))}
       />
     </div>
