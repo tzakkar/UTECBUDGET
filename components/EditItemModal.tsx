@@ -30,7 +30,7 @@ interface BudgetItem {
   replacesItemId: string | null
   replacedById: string | null
   owner?: { id: string; name: string } | null
-  vendor?: { id: string; name: string } | null
+  vendor?: { id?: string; name: string } | null
 }
 
 interface EditItemModalProps {

@@ -43,10 +43,11 @@ interface BudgetItem {
   replacedById: string | null
   replacesItemId: string | null
   ownerId: string | null
+  vendorId: string | null
   replacedBy?: { id: string; itemName: string; year: number } | null
   replacesItem?: { id: string; itemName: string; year: number } | null
   owner?: { id: string; name: string } | null
-  vendor?: { name: string } | null
+  vendor?: { id?: string; name: string } | null
   location?: { name: string } | null
   project?: { name: string } | null
   program?: { name: string } | null
@@ -239,6 +240,7 @@ export default function ItemsPage() {
     capex: 0,
     opex: 0,
     ownerId: "",
+    vendorId: "",
   })
   const [globalFilter, setGlobalFilter] = useState("")
   const [yearFilter, setYearFilter] = useState<string>("all")
@@ -568,6 +570,7 @@ export default function ItemsPage() {
           capex: Number(createPayload.capex) || 0,
           opex: Number(createPayload.opex) || 0,
           ownerId: createPayload.ownerId || null,
+          vendorId: createPayload.vendorId || null,
         }),
       })
       if (!res.ok) throw new Error("Failed to create item")
@@ -590,6 +593,7 @@ export default function ItemsPage() {
         capex: 0,
         opex: 0,
         ownerId: "",
+        vendorId: "",
       })
     } catch (e) {
       console.error(e)
@@ -855,6 +859,18 @@ export default function ItemsPage() {
                 {Array.isArray(owners) && owners.map((owner) => (
                   <SelectItem key={owner.id} value={owner.id}>
                     {owner.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={createPayload.vendorId || undefined} onValueChange={(v) => setCreatePayload({ ...createPayload, vendorId: v })}>
+              <SelectTrigger className="w-full" title="Vendor">
+                <SelectValue placeholder="Select Vendor (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.isArray(vendors) && vendors.map((vendor) => (
+                  <SelectItem key={vendor.id} value={vendor.id}>
+                    {vendor.name}
                   </SelectItem>
                 ))}
               </SelectContent>
