@@ -465,7 +465,7 @@ export default function ItemsPage() {
     }
   }, [table])
 
-  const rowsSafe = useMemo(() => {
+  const rowsSafe = (() => {
     try {
       const rm = table?.getRowModel?.()
       const r = rm?.rows
@@ -475,7 +475,7 @@ export default function ItemsPage() {
       console.error("[rowsSafe] error:", e)
       return []
     }
-  }, [table])
+  })()
 
   const CATEGORY_OPTIONS = [
     "AI Introduction & Business Applications",
